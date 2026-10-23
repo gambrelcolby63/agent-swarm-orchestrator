@@ -1,0 +1,20 @@
+{
+  "name": "Swarm Orchestrator",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "orchestrator",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postCreateCommand": "pip install -e '.[dev]'",
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}
