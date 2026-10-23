@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swarm orchestrator</title>
+<style>
+  :root {
+    --ink: #1c1915;
+    --muted: #5c564c;
+    --paper: #f4f0e6;
+    --card: #fffdf8;
+    --line: #d9d0c1;
+    --accent: #0f6e56;
+    --accent-ink: #e7f6f1;
+    --warn: #8a4b08;
+    --warn-bg: #fff1d6;
+    --bad: #8f1d2c;
+    --bad-bg: #fde8ea;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  header, main { width: min(1100px, calc(100% - 28px)); margin: 0 auto; }
+  header { padding: 28px 0 8px; }
+  h1 { font-size: 1.8rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .lede { margin: 0; color: var(--muted); max-width: 62ch; line-height: 1.45; }
+  .banner {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+  }
+  .layout { display: grid; gap: 16px; padding: 18px 0 48px; }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: 320px 1fr; align-items: start; }
+  }
+  section, form {
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  h2 { font-size: 1rem; margin: 0 0 12px; }
+  label { display: block; font-size: 0.85rem; margin-bottom: 6px; }
+  textarea, select, button, input {
+    font: inherit;
+  }
+  textarea, select {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    padding: 10px;
+    border-radius: 0;
+  }
+  textarea { min-height: 120px; resize: vertical; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  button {
+    min-height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  button.secondary { background: transparent; color: var(--ink); }
+  button.good { background: var(--accent); border-color: var(--accent); }
+  button.bad { background: var(--bad); border-color: var(--bad); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .dag { display: flex; flex-direction: column; gap: 8px; }
+  .node {
+    border: 1px solid var(--line);
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    background: #fff;
+  }
+  .node strong { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.92rem; }
+  .node span, .meta { color: var(--muted); font-size: 0.8rem; }
+  .pill {
+    justify-self: end;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 6px;
+    border: 1px solid var(--line);
+  }
+  .pill.succeeded { color: var(--accent); border-color: var(--accent); }
+  .pill.paused, .pill.running { color: var(--warn); border-color: var(--warn); background: var(--warn-bg); }
+  .pill.failed, .pill.dlq, .pill.rejected { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); }
+  #pause {
+    display: none;
+    border-color: var(--warn);
+    background: var(--warn-bg);
+  }
+  #pause.visible { display: block; }
+  pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+  #log { max-height: 280px; overflow: auto; background: #1c1915; color: #f4f0e6; padding: 12px; }
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { border: 1px solid var(--line); padding: 8px; }
+  .stat b { display: block; font-size: 1.15rem; }
+  .stat span { color: var(--muted); font-size: 0.75rem; }
+  #report { margin-top: 12px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Swarm orchestrator</h1>
+  <p class="lede">A coordinator splits a goal into a DAG, workers take tasks from Redis, and a person approves anything that would move the pan/tilt positioner.</p>
+  <div class="banner">Simulation and bench tests only. Position commands stay inside the sim or Renode shell and cannot be aimed at hardware.</div>
+</header>
+<main class="layout">
+  <form id="goal-form">
+    <h2>New run</h2>
+    <label for="goal">Goal</label>
+    <textarea id="goal">Run a short pan/tilt engineering check: maneuver profile, estimator consistency, firmware fault campaign, a gain proposal, and one simulated setpoint inside the soft limits.</textarea>
+    <label for="team" style="margin-top:10px">Team</label>
+    <select id="team">
+      <option value="gimbal" selected>Pan/tilt engineering</option>
+      <option value="generic">Research, draft, review</option>
+    </select>
+    <div class="row">
+      <button type="submit" id="submit">Start run</button>
+    </div>
+  </form>
+  <div>
+    <section id="pause">
+      <h2>Waiting for a person</h2>
+      <p id="pause-reason"></p>
+      <pre id="pause-lines"></pre>
+      <div class="row">
+        <button class="good" type="button" id="approve">Approve</button>
+        <button class="bad" type="button" id="reject">Reject</button>
+      </div>
+    </section>
+    <section>
+      <h2>Run</h2>
+      <p class="meta" id="run-meta">No run yet.</p>
+      <div class="metrics" id="metrics"></div>
+      <div class="dag" id="dag"></div>
+      <div id="report" class="hidden">
+        <h2>Report</h2>
+        <pre id="report-body"></pre>
+      </div>
+    </section>
+    <section style="margin-top:16px">
+      <h2>Events</h2>
+      <pre id="log">Events appear here.</pre>
+    </section>
+  </div>
+</main>
+<script>
+const state = { runId: null, breakpoint: null, source: null, seen: 0 };
+
+const form = document.getElementById("goal-form");
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("submit");
+  button.disabled = true;
+  const response = await fetch("/api/runs", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      goal: document.getElementById("goal").value,
+      team: document.getElementById("team").value,
+      wait: false
+    })
+  });
+  const body = await response.json();
+  button.disabled = false;
+  watch(body.run_id);
+});
+
+document.getElementById("approve").onclick = () => decide("approve");
+document.getElementById("reject").onclick = () => decide("reject");
+
+async function decide(decision) {
+  if (!state.runId || !state.breakpoint) return;
+  await fetch(`/api/runs/${state.runId}/breakpoints/${state.breakpoint}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ decision, note: "", wait: false })
+  });
+}
+
+function watch(runId) {
+  state.runId = runId;
+  state.breakpoint = null;
+  state.seen = 0;
+  if (state.source) state.source.close();
+  const log = document.getElementById("log");
+  log.textContent = "";
+  state.source = new EventSource(`/api/runs/${runId}/events`);
+  state.source.onmessage = (message) => append(message.data);
+  state.source.addEventListener("snapshot", (message) => append(message.data));
+  for (const kind of ["run_started","planned","task_queued","task_succeeded","task_failed","task_dlq","task_rejected","task_skipped","hitl_paused","hitl_approved","hitl_rejected","run_completed","run_failed"]) {
+    state.source.addEventListener(kind, (message) => append(message.data));
+  }
+  refresh();
+  if (state.timer) clearInterval(state.timer);
+  state.timer = setInterval(refresh, 800);
+}
+
+function append(raw) {
+  let payload;
+  try { payload = JSON.parse(raw); } catch (err) { return; }
+  if (payload.seq && payload.seq <= state.seen) return;
+  if (payload.seq) state.seen = payload.seq;
+  if (!payload.message && payload.status) return;
+  const log = document.getElementById("log");
+  const line = payload.message || payload.type || "";
+  if (!line) return;
+  log.textContent += (log.textContent ? "\n" : "") + line;
+  log.scrollTop = log.scrollHeight;
+}
+
+async function refresh() {
+  if (!state.runId) return;
+  const response = await fetch(`/api/runs/${state.runId}`);
+  if (!response.ok) return;
+  const run = await response.json();
+  render(run);
+  if (run.status === "completed" || run.status === "failed") clearInterval(state.timer);
+}
+
+function render(run) {
+  document.getElementById("run-meta").textContent = `${run.team} · ${run.status} · step ${run.step} · spent ${run.spent}/${run.budget}`;
+  const dag = document.getElementById("dag");
+  dag.innerHTML = "";
+  for (const task of run.tasks || []) {
+    const node = document.createElement("div");
+    node.className = "node";
+    const deps = task.deps.length ? `after ${task.deps.join(", ")}` : "no dependencies";
+    node.innerHTML = `<strong>${task.name}</strong><em class="pill ${task.status}">${task.status}</em><span>${task.agent} · ${deps}</span><span>${task.risk === "high" ? "high risk" : ""}</span>`;
+    dag.appendChild(node);
+  }
+  const metrics = run.metrics || {};
+  document.getElementById("metrics").innerHTML = [
+    ["tasks", metrics.tasks_total ?? 0],
+    ["success", metrics.success_rate == null ? "—" : Math.round(metrics.success_rate * 100) + "%"],
+    ["retries", metrics.retries ?? 0]
+  ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
+  const panel = document.getElementById("pause");
+  if (run.pause) {
+    state.breakpoint = run.pause.id;
+    panel.classList.add("visible");
+    document.getElementById("pause-reason").textContent = run.pause.reason;
+    const lines = (run.pause.proposal && run.pause.proposal.lines) || [];
+    const rejection = run.pause.proposal && run.pause.proposal.rejection;
+    document.getElementById("pause-lines").textContent = [rejection || "", ...lines].filter(Boolean).join("\n");
+  } else {
+    state.breakpoint = null;
+    panel.classList.remove("visible");
+  }
+  const report = document.getElementById("report");
+  if (run.report) {
+    report.classList.remove("hidden");
+    document.getElementById("report-body").textContent = run.report;
+  } else {
+    report.classList.add("hidden");
+  }
+}
+</script>
+</body>
+</html>

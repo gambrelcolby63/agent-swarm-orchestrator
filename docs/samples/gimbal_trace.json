@@ -1,0 +1,222 @@
+{
+  "run_id": "demo-gimbal",
+  "team": "gimbal",
+  "status": "completed",
+  "error": null,
+  "decisions": [
+    {
+      "breakpoint_id": "bp-demo-gimbal:setpoint-2",
+      "kind": "tool_commit",
+      "reason": "Approval required before a position or rate command is sent to the sim shell.",
+      "lines": [
+        "home",
+        "enable",
+        "pos 15.0000 8.0000",
+        "hb",
+        "status"
+      ],
+      "decision": "approve"
+    }
+  ],
+  "tasks": [
+    {
+      "name": "firmware",
+      "agent": "firmware",
+      "status": "succeeded",
+      "retries": 0,
+      "latency_ms": 0.677,
+      "confidence": 0.92
+    },
+    {
+      "name": "scenario",
+      "agent": "scenario",
+      "status": "succeeded",
+      "retries": 0,
+      "latency_ms": 1.845,
+      "confidence": 0.95
+    },
+    {
+      "name": "simulate",
+      "agent": "sim_runner",
+      "status": "succeeded",
+      "retries": 0,
+      "latency_ms": 5.927,
+      "confidence": 0.9
+    },
+    {
+      "name": "setpoint",
+      "agent": "setpoint",
+      "status": "succeeded",
+      "retries": 0,
+      "latency_ms": 0.364,
+      "confidence": 0.97
+    },
+    {
+      "name": "tune",
+      "agent": "tuning",
+      "status": "succeeded",
+      "retries": 0,
+      "latency_ms": 6.196,
+      "confidence": 0.88
+    },
+    {
+      "name": "review",
+      "agent": "gimbal_reviewer",
+      "status": "succeeded",
+      "retries": 0,
+      "latency_ms": 0.514,
+      "confidence": 0.91
+    }
+  ],
+  "metrics": {
+    "tasks_total": 6,
+    "tasks_succeeded": 6,
+    "tasks_failed": 0,
+    "success_rate": 1.0,
+    "retries": 0,
+    "latency_ms_avg": 2.5872,
+    "per_task": [
+      {
+        "task_id": "demo-gimbal:firmware",
+        "name": "firmware",
+        "agent": "firmware",
+        "status": "succeeded",
+        "retries": 0,
+        "attempts": 1,
+        "latency_ms": 0.677,
+        "confidence": 0.92
+      },
+      {
+        "task_id": "demo-gimbal:scenario",
+        "name": "scenario",
+        "agent": "scenario",
+        "status": "succeeded",
+        "retries": 0,
+        "attempts": 1,
+        "latency_ms": 1.845,
+        "confidence": 0.95
+      },
+      {
+        "task_id": "demo-gimbal:simulate",
+        "name": "simulate",
+        "agent": "sim_runner",
+        "status": "succeeded",
+        "retries": 0,
+        "attempts": 1,
+        "latency_ms": 5.927,
+        "confidence": 0.9
+      },
+      {
+        "task_id": "demo-gimbal:setpoint",
+        "name": "setpoint",
+        "agent": "setpoint",
+        "status": "succeeded",
+        "retries": 0,
+        "attempts": 1,
+        "latency_ms": 0.364,
+        "confidence": 0.97
+      },
+      {
+        "task_id": "demo-gimbal:tune",
+        "name": "tune",
+        "agent": "tuning",
+        "status": "succeeded",
+        "retries": 0,
+        "attempts": 1,
+        "latency_ms": 6.196,
+        "confidence": 0.88
+      },
+      {
+        "task_id": "demo-gimbal:review",
+        "name": "review",
+        "agent": "gimbal_reviewer",
+        "status": "succeeded",
+        "retries": 0,
+        "attempts": 1,
+        "latency_ms": 0.514,
+        "confidence": 0.91
+      }
+    ]
+  },
+  "events": [
+    {
+      "type": "run_started",
+      "message": "Run started"
+    },
+    {
+      "type": "planned",
+      "message": "Planned 6 tasks"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued scenario"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued firmware"
+    },
+    {
+      "type": "task_succeeded",
+      "message": "scenario succeeded"
+    },
+    {
+      "type": "task_succeeded",
+      "message": "firmware succeeded"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued simulate"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued setpoint"
+    },
+    {
+      "type": "task_succeeded",
+      "message": "simulate succeeded"
+    },
+    {
+      "type": "hitl_paused",
+      "message": "Approval required before a position or rate command is sent to the sim shell."
+    },
+    {
+      "type": "hitl_approved",
+      "message": "Operator approved the breakpoint"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued setpoint"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued tune"
+    },
+    {
+      "type": "task_succeeded",
+      "message": "setpoint succeeded"
+    },
+    {
+      "type": "task_succeeded",
+      "message": "tune succeeded"
+    },
+    {
+      "type": "task_queued",
+      "message": "Queued review"
+    },
+    {
+      "type": "task_succeeded",
+      "message": "review succeeded"
+    },
+    {
+      "type": "run_completed",
+      "message": "Run finished"
+    }
+  ],
+  "shell": [
+    "home",
+    "enable",
+    "pos 15.0000 8.0000",
+    "hb",
+    "status"
+  ]
+}

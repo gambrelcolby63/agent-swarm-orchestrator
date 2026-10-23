@@ -1,0 +1,12 @@
+{
+  "gimbal_tracker_ros2": {
+    "url": "https://github.com/gambrelcolby63/gimbal-tracker-ros2",
+    "sha": "92632eea57fa913c08ccc6e01d7ce06755054f0e",
+    "role": "C++17 pan/tilt simulator. This orchestrator can run its step-response and estimator Monte Carlo binaries when they are already built. It does not invoke the lead demo."
+  },
+  "stm32_motor_safety_fw": {
+    "url": "https://github.com/gambrelcolby63/stm32-motor-safety-fw",
+    "sha": "6da56d819b3149ebc586cea80c8566f7fb31f904",
+    "role": "STM32F4 pan/tilt positioner firmware. Host ctest and Renode are optional. The lightweight campaign and the UART adapter follow the documented shell, soft limits, and keep-out rules."
+  }
+}
